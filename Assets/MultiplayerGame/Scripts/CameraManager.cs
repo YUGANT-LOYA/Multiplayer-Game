@@ -23,7 +23,7 @@ public class CameraManager : MonoBehaviour
 
 
     [SerializeField] [Range(-5f, 5f)] private float _defaultSensitivity = 1f;
-    [SerializeField] [Range(-5f, 5f)] private float _aimingSensitivity = 0.5f;
+    [SerializeField] [Range(-5f, 5f)] private float _aimingSensitivity = 0.75f;
     [SerializeField] private Camera _camera = null;
     [SerializeField] private CinemachineVirtualCamera _playerCamera = null;
     [SerializeField] private CinemachineVirtualCamera _aimingCamera = null;
@@ -35,6 +35,8 @@ public class CameraManager : MonoBehaviour
     public static Camera mainCamera => singleton._camera;
     public static CinemachineVirtualCamera playerCamera => singleton._playerCamera;
     public static CinemachineVirtualCamera aimingCamera => singleton._aimingCamera;
+
+    public float sensitivity => _aiming ? _aimingSensitivity : _defaultSensitivity;
 
     private bool _aiming = false;
 

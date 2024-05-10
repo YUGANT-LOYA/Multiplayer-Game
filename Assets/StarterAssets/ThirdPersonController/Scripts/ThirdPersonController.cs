@@ -104,6 +104,7 @@ namespace StarterAssets
         private CharacterController _controller;
         private StarterAssetsInputs _input;
         private GameObject _mainCamera;
+        private RigManager _rigManager;
 
         private const float _threshold = 0.01f;
 
@@ -116,6 +117,8 @@ namespace StarterAssets
         private bool _reloading = false;
         private float _aimLayerWeight = 0f;
         private Vector2 _aimedMovingAnimationInput = Vector2.zero;
+        private float aimRigWeight = 0f;
+        private float leftHandWeight = 0f;
 
         private bool IsCurrentDeviceMouse
         {
@@ -134,6 +137,7 @@ namespace StarterAssets
         {
             // get a reference to our main camera
             //Return if this is not the Local Player..
+            _rigManager = GetComponent<RigManager>();
             _mainCamera = CameraManager.mainCamera.gameObject;
             CameraManager.playerCamera.m_Follow = CinemachineCameraTarget.transform;
             CameraManager.aimingCamera.m_Follow = CinemachineCameraTarget.transform;
@@ -176,12 +180,19 @@ namespace StarterAssets
             _aimLayerWeight = Mathf.Lerp(_aimLayerWeight, _aiming || _reloading ? 1f : 0f, 10f * Time.deltaTime);
             _animator.SetLayerWeight(1, _aimLayerWeight);
 
+            aimRigWeight = Mathf.Lerp(aimRigWeight, _aiming && !_reloading ? 1f : 0f, 10f * Time.deltaTime);
+            leftHandWeight = Mathf.Lerp(leftHandWeight, (_aiming || _controller.isGrounded) && !_reloading ? 1f : 0f,
+                10f * Time.deltaTime);
+
+            _rigManager.aimTarget = CameraManager.singleton.aimTargetPoint;
+            _rigManager.aimWeight = aimRigWeight;
+            _rigManager.leftHandWeight = leftHandWeight;
+
             if (_input.walk)
             {
                 _input.walk = false;
                 _walking = !_walking;
             }
-
 
             targetSpeed = RunSpeed;
 
@@ -205,9 +216,22 @@ namespace StarterAssets
                 _input.move.normalized * _speedAnimationMultiplier, SpeedChangeRate * Time.deltaTime);
             _animator.SetFloat("AimSpeed_X", _aimedMovingAnimationInput.x);
             _animator.SetFloat("AimSpeed_Y", _aimedMovingAnimationInput.y);
-            
+
+            if (_input.reload)
+            {
+                _input.reload = false;
+                _animator.SetTrigger("Reload");
+                _reloading = true;
+            }
+
+
             Move();
             Rotate();
+        }
+
+        public void ReloadFinished()
+        {
+            _reloading = false;
         }
 
         void Rotate()
@@ -258,8 +282,8 @@ namespace StarterAssets
                 //Don't multiply mouse input by Time.deltaTime;
                 float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 
-                _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier;
-                _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier;
+                _cinemachineTargetYaw += _input.look.x * CameraManager.singleton.sensitivity * deltaTimeMultiplier;
+                _cinemachineTargetPitch += _input.look.y * CameraManager.singleton.sensitivity * deltaTimeMultiplier;
             }
 
             // clamp our rotations so our values are limited 360 degrees
