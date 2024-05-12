@@ -98,7 +98,7 @@ namespace StarterAssets
 		
 		public void ShootInput(bool newShootState)
 		{
-			jump = newShootState;
+			shoot = newShootState;
 		}
 		
 		public void JumpInput(bool newJumpState)

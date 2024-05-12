@@ -15,8 +15,6 @@ namespace StarterAssets
 #endif
     public class ThirdPersonController : MonoBehaviour
     {
-        [SerializeField] private bool armed = false;
-
         [Header("Player")] public float WalkSpeed = 2.0f;
         public float RunSpeed = 4.0f;
         public float SprintSpeed = 5.335f;
@@ -105,6 +103,7 @@ namespace StarterAssets
         private StarterAssetsInputs _input;
         private GameObject _mainCamera;
         private RigManager _rigManager;
+        private Character _character;
 
         private const float _threshold = 0.01f;
 
@@ -138,6 +137,8 @@ namespace StarterAssets
             // get a reference to our main camera
             //Return if this is not the Local Player..
             _rigManager = GetComponent<RigManager>();
+            _character = GetComponent<Character>();
+
             _mainCamera = CameraManager.mainCamera.gameObject;
             CameraManager.playerCamera.m_Follow = CinemachineCameraTarget.transform;
             CameraManager.aimingCamera.m_Follow = CinemachineCameraTarget.transform;
@@ -165,6 +166,7 @@ namespace StarterAssets
 
         private void Update()
         {
+            bool armed = _character.weapon != null;
             _aiming = _input.aim;
             _sprinting = _input.sprint && !_aiming;
             _hasAnimator = TryGetComponent(out _animator);
@@ -177,11 +179,16 @@ namespace StarterAssets
             _animator.SetFloat("Armed", armed ? 1f : 0f);
             _animator.SetFloat("Aimed", _aiming ? 1f : 0f);
 
-            _aimLayerWeight = Mathf.Lerp(_aimLayerWeight, _aiming || _reloading ? 1f : 0f, 10f * Time.deltaTime);
+            _aimLayerWeight = Mathf.Lerp(_aimLayerWeight, armed && (_aiming || _reloading) ? 1f : 0f,
+                10f * Time.deltaTime);
             _animator.SetLayerWeight(1, _aimLayerWeight);
 
-            aimRigWeight = Mathf.Lerp(aimRigWeight, _aiming && !_reloading ? 1f : 0f, 10f * Time.deltaTime);
-            leftHandWeight = Mathf.Lerp(leftHandWeight, (_aiming || _controller.isGrounded) && !_reloading ? 1f : 0f,
+            aimRigWeight = Mathf.Lerp(aimRigWeight, armed && (_aiming && !_reloading) ? 1f : 0f, 10f * Time.deltaTime);
+            leftHandWeight = Mathf.Lerp(leftHandWeight,
+                armed && !_reloading &&
+                (_aiming || (_controller.isGrounded && _character.weapon.type == Weapon.Handle.TwoHanded))
+                    ? 1f
+                    : 0f,
                 10f * Time.deltaTime);
 
             _rigManager.aimTarget = CameraManager.singleton.aimTargetPoint;
@@ -217,7 +224,15 @@ namespace StarterAssets
             _animator.SetFloat("AimSpeed_X", _aimedMovingAnimationInput.x);
             _animator.SetFloat("AimSpeed_Y", _aimedMovingAnimationInput.y);
 
-            if (_input.reload)
+            if (_input.shoot && armed && !_reloading && _aiming &&
+                _character.weapon.Shoot(_character, CameraManager.singleton.aimTargetPoint))
+            {
+                // Character Slight movement at bullet Shoot !
+
+                _rigManager.ApplyWeaponKick(_character.weapon.handKick, _character.weapon.bodyKick);
+            }
+
+            if (_input.reload && !_reloading)
             {
                 _input.reload = false;
                 _animator.SetTrigger("Reload");
