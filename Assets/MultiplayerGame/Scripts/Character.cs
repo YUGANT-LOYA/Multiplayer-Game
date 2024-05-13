@@ -104,4 +104,9 @@ public class Character : MonoBehaviour
             _weapon = null;
         }
     }
+
+    public void ApplyDamage(Character shooter,Transform hit,float damage)
+    {
+        
+    }
 }

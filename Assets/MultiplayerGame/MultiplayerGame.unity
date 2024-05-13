@@ -1125,6 +1125,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerArmature
       objectReference: {fileID: 0}
+    - target: {fileID: 4416926081852918481, guid: 64dce48905ffd9b4293e595fa6941544,
+        type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 4416926081852918490, guid: 64dce48905ffd9b4293e595fa6941544,
         type: 3}
       propertyPath: armed
@@ -1222,6 +1227,8 @@ MonoBehaviour:
   _leftHand: {fileID: 872975702}
   _body: {fileID: 1977841344}
   _aimTarget: {fileID: 34634779}
+  _weaponHandKickDirection: {x: 0, y: 0, z: 0}
+  _weaponBodyKickDirection: {x: -1, y: 0, z: 0}
 --- !u!114 &1762682268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1813,6 +1820,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 330540247020580782, guid: d1579f6548d6e82438368240e96b81cf,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 330540247020580782, guid: d1579f6548d6e82438368240e96b81cf,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -4
+      objectReference: {fileID: 0}
     - target: {fileID: 2365585547277305987, guid: d1579f6548d6e82438368240e96b81cf,
         type: 3}
       propertyPath: m_Follow
@@ -1833,6 +1850,21 @@ PrefabInstance:
       propertyPath: _cameraBrain
       value: 
       objectReference: {fileID: 1221041501}
+    - target: {fileID: 5117990402607998431, guid: d1579f6548d6e82438368240e96b81cf,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 5117990402607998431, guid: d1579f6548d6e82438368240e96b81cf,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.625
+      objectReference: {fileID: 0}
+    - target: {fileID: 5117990402607998431, guid: d1579f6548d6e82438368240e96b81cf,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1.5
+      objectReference: {fileID: 0}
     - target: {fileID: 7133106953875442299, guid: d1579f6548d6e82438368240e96b81cf,
         type: 3}
       propertyPath: m_Follow
