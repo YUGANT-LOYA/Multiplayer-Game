@@ -28,13 +28,13 @@ public class PrefabManager : MonoBehaviour
             {
                 if (_items[i] != null && _items[i].id.Trim() == id.Trim())
                 {
-                    Debug.Log($"Item Found - {_items[i].id}");
+                    //Debug.Log($"Item Found - {_items[i].id}");
                     return _items[i];
                 }
             }
         }
         
-        Debug.Log("Item Not Found !");
+        //Debug.Log("Item Not Found !");
         return null;
     }
 }

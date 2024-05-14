@@ -46,6 +46,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _items:
   - {fileID: 8602554462803818333, guid: 3bfefff3832e42245afb920668f89685, type: 3}
+  - {fileID: 5283440223488730092, guid: 20cc7d0a47a10664ea86958f5287555d, type: 3}
+  - {fileID: -4906457194870775029, guid: 62f0c58a766f3b042806290304783d9b, type: 3}
+  - {fileID: -7108797211391360767, guid: 0e46a91df8bbdb54a9117f5278fbd07c, type: 3}
 --- !u!1 &1067718110621480922
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,11 +7,11 @@ public class ReloadingStateMachine : StateMachineBehaviour
 {
     public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        ThirdPersonController controller = animator.GetComponent<ThirdPersonController>();
+        Character character = animator.GetComponent<Character>();
 
-        if (controller != null)
+        if (character != null)
         {
-            //controller.ReloadFinished();
+            character.ReloadFinished();
         }
     }
 }

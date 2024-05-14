@@ -113,7 +113,6 @@ namespace StarterAssets
         private float _speedAnimationMultiplier = 0;
         private bool _aiming = false;
         private bool _sprinting = false;
-        private bool _reloading = false;
         private float _aimLayerWeight = 0f;
         private Vector2 _aimedMovingAnimationInput = Vector2.zero;
         private float aimRigWeight = 0f;
@@ -179,13 +178,15 @@ namespace StarterAssets
             _animator.SetFloat("Armed", armed ? 1f : 0f);
             _animator.SetFloat("Aimed", _aiming ? 1f : 0f);
 
-            _aimLayerWeight = Mathf.Lerp(_aimLayerWeight, armed && (_aiming || _reloading) ? 1f : 0f,
+            _aimLayerWeight = Mathf.Lerp(_aimLayerWeight,
+                _character.switchingWeapon || (armed && (_aiming || _character.reloading)) ? 1f : 0f,
                 10f * Time.deltaTime);
             _animator.SetLayerWeight(1, _aimLayerWeight);
 
-            aimRigWeight = Mathf.Lerp(aimRigWeight, armed && (_aiming && !_reloading) ? 1f : 0f, 10f * Time.deltaTime);
+            aimRigWeight = Mathf.Lerp(aimRigWeight, armed && (_aiming && !_character.reloading) ? 1f : 0f,
+                10f * Time.deltaTime);
             leftHandWeight = Mathf.Lerp(leftHandWeight,
-                armed && !_reloading &&
+                armed && !_character.switchingWeapon && !_character.reloading &&
                 (_aiming || (_controller.isGrounded && _character.weapon.type == Weapon.Handle.TwoHanded))
                     ? 1f
                     : 0f,
@@ -224,7 +225,7 @@ namespace StarterAssets
             _animator.SetFloat("AimSpeed_X", _aimedMovingAnimationInput.x);
             _animator.SetFloat("AimSpeed_Y", _aimedMovingAnimationInput.y);
 
-            if (_input.shoot && armed && !_reloading && _aiming &&
+            if (_input.shoot && armed && !_character.reloading && _aiming &&
                 _character.weapon.Shoot(_character, CameraManager.singleton.aimTargetPoint))
             {
                 // Character Slight movement at bullet Shoot !
@@ -232,21 +233,21 @@ namespace StarterAssets
                 _rigManager.ApplyWeaponKick(_character.weapon.handKick, _character.weapon.bodyKick);
             }
 
-            if (_input.reload && !_reloading)
+            if (_input.reload && !_character.reloading)
             {
                 _input.reload = false;
                 _animator.SetTrigger("Reload");
-                _reloading = true;
+                _character.Reload();
+            }
+
+            if (_input.switchWeapon != 0)
+            {
+                _character.ChangeWeapon(_input.switchWeapon);
             }
 
 
             Move();
             Rotate();
-        }
-
-        public void ReloadFinished()
-        {
-            _reloading = false;
         }
 
         void Rotate()

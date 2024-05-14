@@ -59,8 +59,8 @@ public class Projectile : MonoBehaviour
         _damage = damage;
 
         transform.LookAt(target);
-        _rigidbody.velocity = transform.forward * _speed;
-        Destroy(gameObject,5f);
+        _rigidbody.velocity = transform.forward.normalized * _speed;
+        Destroy(gameObject, 5f);
     }
 
 
@@ -85,7 +85,7 @@ public class Projectile : MonoBehaviour
             Transform impact = Instantiate(_defaultImpact, other.contacts[0].point,
                 Quaternion.FromToRotation(Vector3.up, other.contacts[0].normal));
 
-            Destroy(impact.gameObject,30f);
+            Destroy(impact.gameObject, 10f);
         }
 
 

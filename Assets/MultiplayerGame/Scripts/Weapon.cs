@@ -13,9 +13,13 @@ public class Weapon : Item
 
     [Header("Settings")] [SerializeField] private Handle _type = Handle.TwoHanded;
     public Handle type => _type;
+    [SerializeField] private string _ammoId = "";
+    public string ammoId => _ammoId;
+    
     [SerializeField] private float _damage = 1f;
     [SerializeField] private float _fireRate = 0.2f;
     [SerializeField] private int _clipSize = 30;
+    public int clipSize => _clipSize;
 
     [SerializeField] private float _handKick = 5f;
     public float handKick => _handKick;
@@ -37,6 +41,13 @@ public class Weapon : Item
 
     private float _fireTimer = 0f;
 
+    private int _ammo = 0;
+    public int ammo
+    {
+        get => _ammo;
+        set => _ammo = value;
+    }
+
     [Header("References")] [SerializeField]
     Transform _muzzle = null;
 
@@ -52,9 +63,12 @@ public class Weapon : Item
     public bool Shoot(Character character, Vector3 target)
     {
         float passedTime = Time.realtimeSinceStartup - _fireTimer;
-
-        if (passedTime >= _fireRate)
+        //Debug.Log("Shoot Entered !");
+        
+        if (_ammo > 0 && passedTime >= _fireRate)
         {
+            //Debug.Log("Bullet Fired !");
+            _ammo -= 1;
             _fireTimer = Time.realtimeSinceStartup;
 
             //Bullet Logic
