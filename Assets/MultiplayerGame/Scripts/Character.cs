@@ -1,10 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using StarterAssets;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 
 public class Character : MonoBehaviour
 {
+    public bool isLocalPlayer;
+
+    [SerializeField] private string _id = "";
+    public string id => _id;
+
+
     [SerializeField] private Transform _weaponHolder = null;
 
     private Animator _animator;
@@ -17,7 +25,8 @@ public class Character : MonoBehaviour
 
     private List<Item> _items = new List<Item>();
     private RigManager _rigManager = null;
-
+    private Rigidbody[] _ragdollRigidBodies = null;
+    private Collider[] _ragdollColliders = null;
     private Weapon _weaponToEquip = null;
 
     private bool _reloading = false;
@@ -26,15 +35,162 @@ public class Character : MonoBehaviour
     private bool _switchingWeapon = false;
     public bool switchingWeapon => _switchingWeapon;
 
+    private float _health = 100f;
+    public float health => _health;
+
+    private bool _grounded;
+    private bool _walking = false;
+    private float _speedAnimationMultiplier = 0;
+    private bool _aiming = false;
+    private bool _sprinting = false;
+    private float _aimLayerWeight = 0f;
+    private Vector2 _aimedMovingAnimationInput = Vector2.zero;
+    private float aimRigWeight = 0f;
+    private float leftHandWeight = 0f;
+    private Vector3 _aimTarget;
+    private Vector3 _lastPosition = Vector3.zero;
+
+    public bool isGrounded
+    {
+        get => _grounded;
+        set => _grounded = value;
+    }
+
+    public bool walking
+    {
+        get => _walking;
+        set => _walking = value;
+    }
+
+    public float speedAnimationMultiplier
+    {
+        get => _speedAnimationMultiplier;
+        set => _speedAnimationMultiplier = value;
+    }
+
+    public bool aiming
+    {
+        get => _aiming;
+        set => _aiming = value;
+    }
+
+    public bool sprinting
+    {
+        get => _sprinting;
+        set => _sprinting = value;
+    }
+
+    public Vector3 aimTarget
+    {
+        get => _aimTarget;
+        set => _aimTarget = value;
+    }
 
     private void Awake()
     {
+        _ragdollColliders = GetComponentsInChildren<Collider>();
+        _ragdollRigidBodies = GetComponentsInChildren<Rigidbody>();
+
+        if (_ragdollRigidBodies != null)
+        {
+            foreach (Rigidbody rb in _ragdollRigidBodies)
+            {
+                rb.mass *= 50f;
+            }
+        }
+
+        if (_ragdollColliders != null)
+        {
+            foreach (Collider col in _ragdollColliders)
+            {
+                col.isTrigger = false;
+            }
+        }
+
+        SetRagDollStatus(false);
+
         _animator = GetComponent<Animator>();
         _rigManager = GetComponent<RigManager>();
         Initialize(new Dictionary<string, int>
             { { "Rifle", 1 }, { "RifleBullet", 1000 }, { "Pistol", 1 }, { "PistolBullet", 1000 } });
         //Initialize(new Dictionary<string, int> { { "Rifle", 1 }, { "Bullet", 1000 } });
         //Initialize(new Dictionary<string, int> { { "Pistol", 1 }, { "PistolBullet", 1000 } });
+    }
+
+    private void Start()
+    {
+        if (isLocalPlayer)
+        {
+            SetLayer(transform, LayerMask.NameToLayer("LocalPlayer"));
+        }
+        else
+        {
+            SetLayer(transform, LayerMask.NameToLayer("NetworkPlayer"));
+        }
+    }
+
+    private void Update()
+    {
+        bool armed = _weapon != null;
+
+        _aimLayerWeight = Mathf.Lerp(_aimLayerWeight,
+            _switchingWeapon || (armed && (_aiming || _reloading)) ? 1f : 0f,
+            10f * Time.deltaTime);
+
+        _animator.SetLayerWeight(1, _aimLayerWeight);
+
+        aimRigWeight = Mathf.Lerp(aimRigWeight, armed && (_aiming && !_reloading) ? 1f : 0f,
+            10f * Time.deltaTime);
+
+        leftHandWeight = Mathf.Lerp(leftHandWeight,
+            armed && !_switchingWeapon && !_reloading &&
+            (_aiming || (_grounded && _weapon.type == Weapon.Handle.TwoHanded))
+                ? 1f
+                : 0f, 10f * Time.deltaTime);
+
+        _rigManager.aimTarget = _aimTarget;
+        _rigManager.aimWeight = aimRigWeight;
+        _rigManager.leftHandWeight = leftHandWeight;
+
+        if (_sprinting)
+        {
+            _speedAnimationMultiplier = 3f;
+        }
+        else if (walking)
+        {
+            _speedAnimationMultiplier = 1f;
+        }
+        else
+        {
+            _speedAnimationMultiplier = 2f;
+        }
+
+        Vector3 deltaPos = transform.InverseTransformDirection(transform.position - _lastPosition).normalized;
+
+        _aimedMovingAnimationInput = Vector2.Lerp(_aimedMovingAnimationInput,
+            new Vector2(deltaPos.x, deltaPos.z) * _speedAnimationMultiplier, 10f * Time.deltaTime);
+
+        _animator.SetFloat("AimSpeed_X", _aimedMovingAnimationInput.x);
+        _animator.SetFloat("AimSpeed_Y", _aimedMovingAnimationInput.y);
+        _animator.SetFloat("Armed", armed ? 1f : 0f);
+        _animator.SetFloat("Aimed", _aiming ? 1f : 0f);
+    }
+
+
+    private void LateUpdate()
+    {
+        _lastPosition = transform.position;
+    }
+
+    void SetRagDollStatus(bool enabled)
+    {
+        if (_ragdollRigidBodies != null)
+        {
+            for (int i = 0; i < _ragdollRigidBodies.Length; i++)
+            {
+                _ragdollRigidBodies[i].isKinematic = !enabled;
+            }
+        }
     }
 
     public void Initialize(Dictionary<string, int> items)
@@ -96,72 +252,94 @@ public class Character : MonoBehaviour
     public void ChangeWeapon(float direction)
     {
         //Debug.Log("Change Weapon Called !");
-        
+
         //Dir > 0, Val = 1
         //Dir < 0, Val = -1
         //Dir = 0, Val = 0
         int x = direction > 0 ? 1 : direction < 0 ? -1 : 0;
-        
+
         if (x != 0 && !_switchingWeapon)
         {
-            int prevWeapon = -1;
-            int currentWeapon = -1;
-            int nextWeapon = -1;
-
-            for (int i = 0; i < _items.Count; i++)
-            {
-                Item item = _items[i];
-                if (item != null && item.GetType() == typeof(Weapon))
-                {
-                    if (item.gameObject == _weapon.gameObject)
-                    {
-                        currentWeapon = i;
-                    }
-                    else
-                    {
-                        if (currentWeapon < 0 && prevWeapon < 0)
-                        {
-                            prevWeapon = i;
-                        }
-
-                        if (currentWeapon >= 0 && nextWeapon < 0)
-                        {
-                            nextWeapon = i;
-                        }
-                    }
-                }
-            }
-
-            int targetWeapon = -1;
-
             if (x > 0)
             {
-                if (nextWeapon >= 0)
-                {
-                    targetWeapon = nextWeapon;
-                }
-                else if (prevWeapon >= 0)
-                {
-                    targetWeapon = prevWeapon;
-                }
+                NextWeapon();
             }
             else
             {
-                if (prevWeapon >= 0)
-                {
-                    targetWeapon = prevWeapon;
-                }
-                else if (nextWeapon >= 0)
-                {
-                    targetWeapon = nextWeapon;
-                }
+                PrevWeapon();
             }
+        }
+    }
 
-            if (targetWeapon >= 0)
-            {       
-                //Debug.Log("Target Weapon Equipping !");
-                EquipWeapon((Weapon)_items[targetWeapon]);
+    void NextWeapon()
+    {
+        int first = -1;
+        int currWeapon = -1;
+
+        for (int i = 0; i < _items.Count; i++)
+        {
+            Item item = _items[i];
+
+            if (item != null && _items.GetType() == typeof(Weapon))
+            {
+                if (_weapon != null && item.gameObject == _weapon.gameObject)
+                {
+                    currWeapon = i;
+                }
+                else
+                {
+                    if (currWeapon >= 0)
+                    {
+                        EquipWeapon((Weapon)item);
+                        return;
+                    }
+                    else if (first < 0)
+                    {
+                        first = i;
+                    }
+                }
             }
+        }
+
+        if (first >= 0)
+        {
+            EquipWeapon((Weapon)_items[first]);
+        }
+    }
+
+    void PrevWeapon()
+    {
+        int last = -1;
+        int currWeapon = -1;
+
+        for (int i = _items.Count - 1; i >= 0; i--)
+        {
+            Item item = _items[i];
+
+            if (item != null && _items.GetType() == typeof(Weapon))
+            {
+                if (_weapon != null && item.gameObject == _weapon.gameObject)
+                {
+                    currWeapon = i;
+                }
+                else
+                {
+                    if (currWeapon >= 0)
+                    {
+                        EquipWeapon((Weapon)item);
+                        return;
+                    }
+                    else if (last < 0)
+                    {
+                        last = i;
+                    }
+                }
+            }
+        }
+
+        if (last >= 0)
+        {
+            EquipWeapon((Weapon)_items[last]);
         }
     }
 
@@ -295,5 +473,44 @@ public class Character : MonoBehaviour
 
     public void ApplyDamage(Character shooter, Transform hit, float damage)
     {
+        if (_health > 0f)
+        {
+            _health -= damage;
+
+            if (_health <= 0f)
+            {
+                _health = 0f;
+                SetRagDollStatus(true);
+                Destroy(_rigManager);
+                Destroy(GetComponent<RigBuilder>());
+                Destroy(_animator);
+
+                ThirdPersonController thirdPersonController = GetComponent<ThirdPersonController>();
+
+                if (thirdPersonController != null)
+                {
+                    Destroy(thirdPersonController);
+                }
+
+                CharacterController characterController = GetComponent<CharacterController>();
+
+                if (characterController != null)
+                {
+                    Destroy(characterController);
+                }
+
+                Destroy(this);
+            }
+        }
+    }
+
+    public void SetLayer(Transform root, int layer)
+    {
+        Transform[] children = root.GetComponentsInChildren<Transform>();
+
+        foreach (Transform child in children)
+        {
+            child.gameObject.layer = layer;
+        }
     }
 }

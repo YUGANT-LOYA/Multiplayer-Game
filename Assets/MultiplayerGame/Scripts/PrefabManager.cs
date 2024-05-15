@@ -5,8 +5,9 @@ using UnityEngine;
 public class PrefabManager : MonoBehaviour
 {
     private static PrefabManager _instance = null;
-    public Item[] _items = null;
-
+    [SerializeField] private Item[] _items = null;
+    [SerializeField] private Character[] _characters = null;
+    
     public static PrefabManager singleton
     {
         get
@@ -35,6 +36,24 @@ public class PrefabManager : MonoBehaviour
         }
         
         //Debug.Log("Item Not Found !");
+        return null;
+    }
+    
+    public Character GetCharacterPrefab(string id)
+    {
+        if (_characters != null)
+        {
+            for (int i = 0; i < _characters.Length; i++)
+            {
+                if (_characters[i] != null && _characters[i].id.Trim() == id.Trim())
+                {
+                    //Debug.Log($"Character Found - {_items[i].id}");
+                    return _characters[i];
+                }
+            }
+        }
+        
+        //Debug.Log("Character Not Found !");
         return null;
     }
 }

@@ -50,7 +50,7 @@ MonoBehaviour:
   _id: Pistol
   _type: 2
   _ammoId: PistolBullet
-  _damage: 1
+  _damage: 15
   _fireRate: 0.4
   _clipSize: 12
   _handKick: 3

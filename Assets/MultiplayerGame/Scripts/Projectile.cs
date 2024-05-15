@@ -82,10 +82,14 @@ public class Projectile : MonoBehaviour
         }
         else if (_defaultImpact != null)
         {
-            Transform impact = Instantiate(_defaultImpact, other.contacts[0].point,
-                Quaternion.FromToRotation(Vector3.up, other.contacts[0].normal));
+            if (other.gameObject.layer != LayerMask.NameToLayer("LocalPlayer") &&
+                other.gameObject.layer != LayerMask.NameToLayer("NetworkPlayer"))
+            {
+                Transform impact = Instantiate(_defaultImpact, other.contacts[0].point,
+                    Quaternion.FromToRotation(Vector3.up, other.contacts[0].normal));
 
-            Destroy(impact.gameObject, 10f);
+                Destroy(impact.gameObject, 10f);
+            }
         }
 
 
