@@ -1550,7 +1550,9 @@ GameObject:
   - component: {fileID: 4466950146429301001}
   - component: {fileID: 8532479354463712838}
   - component: {fileID: 4889907668572619798}
+  - component: {fileID: 3329395483518102769}
   - component: {fileID: 6685668074370897320}
+  - component: {fileID: 803681311545752939}
   m_Layer: 0
   m_Name: Bot
   m_TagString: Player
@@ -1844,6 +1846,27 @@ MonoBehaviour:
   - m_Rig: {fileID: 3611984885138302261}
     m_Active: 1
   m_Effectors: []
+--- !u!114 &3329395483518102769
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4688987455473861831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 2654589216
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!114 &6685668074370897320
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1860,6 +1883,37 @@ MonoBehaviour:
   _id: Bot
   _weaponHolder: {fileID: 3421634391705667857}
   _ammo: {fileID: 0}
+--- !u!114 &803681311545752939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4688987455473861831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d7207b6c2143104c9fae8905a645b6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UseUnreliableDeltas: 0
+  SyncPositionX: 1
+  SyncPositionY: 1
+  SyncPositionZ: 1
+  SyncRotAngleX: 1
+  SyncRotAngleY: 1
+  SyncRotAngleZ: 1
+  SyncScaleX: 0
+  SyncScaleY: 0
+  SyncScaleZ: 0
+  PositionThreshold: 0.001
+  RotAngleThreshold: 0.01
+  ScaleThreshold: 0.01
+  UseQuaternionSynchronization: 0
+  UseQuaternionCompression: 0
+  UseHalfFloatPrecision: 0
+  InLocalSpace: 0
+  Interpolate: 1
+  SlerpPosition: 0
 --- !u!1 &4952090293619136177
 GameObject:
   m_ObjectHideFlags: 0

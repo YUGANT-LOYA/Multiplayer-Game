@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using LitJson;
 using StarterAssets;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
-public class Character : MonoBehaviour
+public class Character : NetworkBehaviour
 {
     public bool isLocalPlayer;
 
@@ -49,6 +51,9 @@ public class Character : MonoBehaviour
     private float leftHandWeight = 0f;
     private Vector3 _aimTarget;
     private Vector3 _lastPosition = Vector3.zero;
+
+    private ulong _clientID = 0;
+    private bool _initialized = false;
 
     public bool isGrounded
     {
@@ -111,14 +116,29 @@ public class Character : MonoBehaviour
 
         _animator = GetComponent<Animator>();
         _rigManager = GetComponent<RigManager>();
-        Initialize(new Dictionary<string, int>
-            { { "Rifle", 1 }, { "RifleBullet", 1000 }, { "Pistol", 1 }, { "PistolBullet", 1000 } });
-        //Initialize(new Dictionary<string, int> { { "Rifle", 1 }, { "Bullet", 1000 } });
-        //Initialize(new Dictionary<string, int> { { "Pistol", 1 }, { "PistolBullet", 1000 } });
     }
 
-    private void Start()
+    public void InitializeServer(Dictionary<string, int> items, List<string> itemIds, ulong clientId)
     {
+        if (_initialized)
+            return;
+
+        _initialized = true;
+        _clientID = clientId;
+
+        _Initialize(items, itemIds);
+    }
+
+
+    [ClientRpc]
+    public void InitializeClientRpc(string itemsJson, string itemIdsJson, ulong clientId)
+    {
+        if (_initialized)
+            return;
+
+        _initialized = true;
+        _clientID = clientId;
+
         if (isLocalPlayer)
         {
             SetLayer(transform, LayerMask.NameToLayer("LocalPlayer"));
@@ -126,6 +146,14 @@ public class Character : MonoBehaviour
         else
         {
             SetLayer(transform, LayerMask.NameToLayer("NetworkPlayer"));
+        }
+
+        Dictionary<string, int> items = JsonMapper.ToObject<Dictionary<string, int>>(itemsJson);
+        List<string> itemIds = JsonMapper.ToObject<List<string>>(itemIdsJson);
+
+        if (items != null && itemIds != null)
+        {
+            _Initialize(items, itemIds);
         }
     }
 
@@ -193,11 +221,12 @@ public class Character : MonoBehaviour
         }
     }
 
-    public void Initialize(Dictionary<string, int> items)
+    private void _Initialize(Dictionary<string, int> items, List<string> itemIds)
     {
         if (_items != null && PrefabManager.singleton != null)
         {
             int firstWeaponIndex = -1;
+            int i = 0;
 
             foreach (var itemData in items)
             {
@@ -205,40 +234,32 @@ public class Character : MonoBehaviour
 
                 if (itemPrefab != null && itemData.Value > 0)
                 {
-                    for (int i = 1; i <= itemData.Value; i++)
+                    Item item = Instantiate(itemPrefab, transform);
+                    item.networkId = itemIds[i];
+                    if (item.GetType() == typeof(Weapon))
                     {
-                        Item item = Instantiate(itemPrefab, transform);
-                        bool done = false;
+                        Weapon weapon = (Weapon)item;
 
-                        if (item.GetType() == typeof(Weapon))
+                        weapon.transform.SetParent(_weaponHolder);
+                        weapon.transform.localPosition = weapon.rightHandPosition;
+                        weapon.transform.localEulerAngles = weapon.rightHandRotation;
+
+                        if (firstWeaponIndex < 0)
                         {
-                            Weapon weapon = (Weapon)item;
-
-                            weapon.transform.SetParent(_weaponHolder);
-                            weapon.transform.localPosition = weapon.rightHandPosition;
-                            weapon.transform.localEulerAngles = weapon.rightHandRotation;
-
-                            if (firstWeaponIndex < 0)
-                            {
-                                firstWeaponIndex = _items.Count;
-                            }
-                        }
-                        else if (item.GetType() == typeof(Ammo))
-                        {
-                            Ammo ammoItem = (Ammo)item;
-                            ammoItem.amount = itemData.Value;
-                            done = true;
-                        }
-
-                        item.gameObject.SetActive(false);
-                        _items.Add(item);
-
-                        if (done)
-                        {
-                            break;
+                            firstWeaponIndex = _items.Count;
                         }
                     }
+                    else if (item.GetType() == typeof(Ammo))
+                    {
+                        Ammo ammoItem = (Ammo)item;
+                        ammoItem.amount = itemData.Value;
+                    }
+
+                    item.gameObject.SetActive(false);
+                    _items.Add(item);
                 }
+
+                i++;
             }
 
             if (firstWeaponIndex >= 0 && _weapon == null)

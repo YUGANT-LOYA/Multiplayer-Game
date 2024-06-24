@@ -121,34 +121,31 @@ namespace StarterAssets
 #endif
             }
         }
-
-
-        private void Awake()
+        
+        private void Start()
         {
-            // get a reference to our main camera
-            //Return if this is not the Local Player..
             _rigManager = GetComponent<RigManager>();
             _character = GetComponent<Character>();
+            _hasAnimator = TryGetComponent(out _animator);
+            _controller = GetComponent<CharacterController>();
+            _input = GetComponent<StarterAssetsInputs>();
+            _playerInput = GetComponent<PlayerInput>();
+            _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
+
+            if (!_character.IsOwner)
+            {
+                Destroy(this);
+                Destroy(_playerInput);
+                Destroy(_input);
+                Destroy(_controller);
+                return;
+            }
+
+            AssignAnimationIDs();
 
             _mainCamera = CameraManager.mainCamera.gameObject;
             CameraManager.playerCamera.m_Follow = CinemachineCameraTarget.transform;
             CameraManager.aimingCamera.m_Follow = CinemachineCameraTarget.transform;
-        }
-
-        private void Start()
-        {
-            _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
-
-            _hasAnimator = TryGetComponent(out _animator);
-            _controller = GetComponent<CharacterController>();
-            _input = GetComponent<StarterAssetsInputs>();
-#if ENABLE_INPUT_SYSTEM
-            _playerInput = GetComponent<PlayerInput>();
-#else
-			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
-#endif
-
-            AssignAnimationIDs();
 
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
@@ -204,11 +201,11 @@ namespace StarterAssets
             {
                 _character.ChangeWeapon(_input.switchWeapon);
             }
-            
+
             _character.isGrounded = _controller.isGrounded;
             CameraManager.singleton.aiming = _character.aiming;
             _character.aimTarget = CameraManager.singleton.aimTargetPoint;
-            
+
             Move();
             Rotate();
         }

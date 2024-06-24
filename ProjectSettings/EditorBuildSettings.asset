@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/StarterAssets/ThirdPersonController/Scenes/Playground.unity
-    guid: e9017d5f96b9f09489b4b37e1d6eb914
+    path: Assets/MultiplayerGame/MultiplayerGame.unity
+    guid: cb6cac84cd31a37498541fbf850f7e99
   m_configObjects: {}
