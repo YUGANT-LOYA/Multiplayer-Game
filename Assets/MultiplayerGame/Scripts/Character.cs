@@ -252,10 +252,6 @@ public class Character : MonoBehaviour
     public void ChangeWeapon(float direction)
     {
         //Debug.Log("Change Weapon Called !");
-
-        //Dir > 0, Val = 1
-        //Dir < 0, Val = -1
-        //Dir = 0, Val = 0
         int x = direction > 0 ? 1 : direction < 0 ? -1 : 0;
 
         if (x != 0 && !_switchingWeapon)
@@ -280,7 +276,7 @@ public class Character : MonoBehaviour
         {
             Item item = _items[i];
 
-            if (item != null && _items.GetType() == typeof(Weapon))
+            if (item != null && item.GetType() == typeof(Weapon))
             {
                 if (_weapon != null && item.gameObject == _weapon.gameObject)
                 {
@@ -316,7 +312,7 @@ public class Character : MonoBehaviour
         {
             Item item = _items[i];
 
-            if (item != null && _items.GetType() == typeof(Weapon))
+            if (item != null && item.GetType() == typeof(Weapon))
             {
                 if (_weapon != null && item.gameObject == _weapon.gameObject)
                 {
